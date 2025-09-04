@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from app.models.models import db, Test, Question, Option
+from models import db, Test, Question, Option
 from app.utils.pdf_processor import extract_text_from_pdf, generate_questions_with_ai, is_ai_available, validate_questions_json
 import os
 import json
