@@ -5,7 +5,7 @@
 ### Backend
 ```bash
 pip install -r requirements.txt
-python run.py
+python app.py
 ```
 
 ### Frontend
@@ -41,7 +41,7 @@ SECRET_KEY=your-secret-key
 
 **Render:**
 - Build: `pip install -r requirements.txt`
-- Start: `gunicorn run:app`
+- Start: `gunicorn app:app`
 - Add environment variables
 
 **Netlify/Vercel:**
