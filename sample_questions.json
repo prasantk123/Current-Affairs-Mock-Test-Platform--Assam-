@@ -1,0 +1,37 @@
+[
+  {
+    "question": "Which country hosted the G20 Summit in 2023?",
+    "options": ["India", "Indonesia", "Italy", "Japan"],
+    "correct_answers": [0],
+    "explanation": "India hosted the G20 Summit in New Delhi in September 2023.",
+    "type": "MCQ"
+  },
+  {
+    "question": "What is the theme of India's G20 Presidency?",
+    "options": ["Vasudhaiva Kutumbakam", "Digital India", "Make in India", "Atmanirbhar Bharat"],
+    "correct_answers": [0],
+    "explanation": "The theme 'Vasudhaiva Kutumbakam' means 'One Earth, One Family, One Future'.",
+    "type": "MCQ"
+  },
+  {
+    "question": "Which of the following are members of BRICS? (Select all correct)",
+    "options": ["Brazil", "Russia", "India", "China", "South Africa", "Argentina"],
+    "correct_answers": [0, 1, 2, 3, 4],
+    "explanation": "BRICS originally consisted of Brazil, Russia, India, China, and South Africa. Argentina was invited to join in 2023.",
+    "type": "MSQ"
+  },
+  {
+    "question": "Who won the Nobel Peace Prize in 2023?",
+    "options": ["Narges Mohammadi", "Maria Ressa", "Dmitry Muratov", "World Food Programme"],
+    "correct_answers": [0],
+    "explanation": "Narges Mohammadi, an Iranian human rights activist, won the Nobel Peace Prize in 2023.",
+    "type": "MCQ"
+  },
+  {
+    "question": "Which mission successfully landed on the Moon's south pole in 2023?",
+    "options": ["Artemis 1", "Chang'e 5", "Chandrayaan-3", "Luna 25"],
+    "correct_answers": [2],
+    "explanation": "India's Chandrayaan-3 mission successfully landed on the Moon's south pole in August 2023.",
+    "type": "MCQ"
+  }
+]
