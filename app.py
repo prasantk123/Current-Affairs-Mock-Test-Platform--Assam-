@@ -4,6 +4,7 @@ from flask_cors import CORS
 from datetime import datetime
 import os
 import json
+import requests
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -55,13 +56,58 @@ class UserAnswer(db.Model):
 
 # AI Functions
 def is_ai_available():
-    return False  # Disabled for minimal deployment
+    api_key = os.getenv('GEMINI_API_KEY')
+    return bool(api_key and api_key.strip())
 
 def extract_text_from_pdf(pdf_path):
-    return "PDF processing disabled for minimal deployment"
+    try:
+        import PyPDF2
+        text = ""
+        with open(pdf_path, 'rb') as file:
+            reader = PyPDF2.PdfReader(file)
+            for page in reader.pages:
+                text += page.extract_text()
+        return text
+    except Exception as e:
+        return f"Error extracting text: {str(e)}"
 
 def generate_questions_with_ai(text, num_questions=10):
-    return []  # Disabled for minimal deployment
+    try:
+        api_key = os.getenv('GEMINI_API_KEY')
+        if not api_key:
+            return []
+        
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={api_key}"
+        
+        prompt = f"""Generate {num_questions} multiple choice questions from this text.
+Return ONLY a valid JSON array with this exact format:
+[{{"question": "Question text?", "options": ["Option A", "Option B", "Option C", "Option D"], "correct_answers": [0], "explanation": "Brief explanation", "type": "MCQ"}}]
+
+Text: {text[:2000]}"""
+        
+        payload = {
+            "contents": [{
+                "parts": [{"text": prompt}]
+            }]
+        }
+        
+        response = requests.post(url, json=payload, timeout=30)
+        if response.status_code == 200:
+            result = response.json()
+            text_response = result['candidates'][0]['content']['parts'][0]['text']
+            
+            # Clean response
+            text_response = text_response.strip()
+            if text_response.startswith('```json'):
+                text_response = text_response[7:]
+            if text_response.endswith('```'):
+                text_response = text_response[:-3]
+            
+            return json.loads(text_response.strip())
+        return []
+    except Exception as e:
+        print(f"AI Error: {e}")
+        return []
 
 # Routes
 @app.route('/api/admin/ai-status')
@@ -70,7 +116,59 @@ def ai_status():
 
 @app.route('/api/admin/upload-pdf', methods=['POST'])
 def upload_pdf():
-    return jsonify({'error': 'PDF upload disabled in minimal deployment. Use JSON upload instead.'}), 400
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file uploaded'}), 400
+    
+    file = request.files['file']
+    if not file.filename.lower().endswith('.pdf'):
+        return jsonify({'error': 'Please upload a PDF file'}), 400
+    
+    test_title = request.form.get('title', 'Test')
+    duration = int(request.form.get('duration', 60))
+    
+    pdf_path = f"temp_{file.filename}"
+    file.save(pdf_path)
+    
+    try:
+        text = extract_text_from_pdf(pdf_path)
+        if len(text.strip()) < 50:
+            return jsonify({'error': 'PDF contains insufficient text'}), 400
+        
+        questions_data = generate_questions_with_ai(text)
+        if not questions_data:
+            return jsonify({'error': 'Failed to generate questions from PDF'}), 400
+        
+        test = Test(title=test_title, duration=duration)
+        db.session.add(test)
+        db.session.flush()
+        
+        for q_data in questions_data:
+            question = Question(
+                test_id=test.id,
+                question_text=q_data['question'],
+                question_type=q_data['type'],
+                explanation=q_data['explanation']
+            )
+            db.session.add(question)
+            db.session.flush()
+            
+            for j, option_text in enumerate(q_data['options']):
+                option = Option(
+                    question_id=question.id,
+                    option_text=option_text,
+                    is_correct=j in q_data['correct_answers']
+                )
+                db.session.add(option)
+        
+        db.session.commit()
+        os.remove(pdf_path)
+        
+        return jsonify({'message': f'Test created with {len(questions_data)} questions'})
+    except Exception as e:
+        db.session.rollback()
+        if os.path.exists(pdf_path):
+            os.remove(pdf_path)
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/admin/upload-json', methods=['POST'])
 def upload_json():
