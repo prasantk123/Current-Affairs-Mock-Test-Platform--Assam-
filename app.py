@@ -64,9 +64,10 @@ def extract_text_from_pdf(pdf_path):
         import PyPDF2
         text = ""
         with open(pdf_path, 'rb') as file:
-            reader = PyPDF2.PdfReader(file)
-            for page in reader.pages:
-                text += page.extract_text()
+            reader = PyPDF2.PdfFileReader(file)
+            for page_num in range(reader.numPages):
+                page = reader.getPage(page_num)
+                text += page.extractText()
         return text
     except Exception as e:
         return f"Error extracting text: {str(e)}"
