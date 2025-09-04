@@ -1,8 +1,8 @@
-Flask==2.3.3
+Flask==2.3.2
 Flask-SQLAlchemy==3.0.5
 Flask-CORS==4.0.0
 google-generativeai==0.3.0
 python-dotenv==1.0.0
-PyMuPDF==1.26.4
-gunicorn==21.2.0
-psycopg2-binary==2.9.7
+PyMuPDF==1.23.5
+gunicorn==20.1.0
+psycopg2-binary==2.9.5
