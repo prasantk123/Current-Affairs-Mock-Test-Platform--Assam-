@@ -4,7 +4,6 @@ from flask_cors import CORS
 from datetime import datetime
 import os
 import json
-import fitz
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -56,47 +55,13 @@ class UserAnswer(db.Model):
 
 # AI Functions
 def is_ai_available():
-    try:
-        import google.generativeai as genai
-        api_key = os.getenv('GEMINI_API_KEY')
-        return bool(api_key and api_key.strip())
-    except:
-        return False
+    return False  # Disabled for minimal deployment
 
 def extract_text_from_pdf(pdf_path):
-    try:
-        doc = fitz.open(pdf_path)
-        text = ""
-        for page in doc:
-            text += page.get_text()
-        doc.close()
-        return text
-    except:
-        return ""
+    return "PDF processing disabled for minimal deployment"
 
 def generate_questions_with_ai(text, num_questions=10):
-    try:
-        import google.generativeai as genai
-        api_key = os.getenv('GEMINI_API_KEY')
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        
-        prompt = f"""Generate {num_questions} multiple choice questions from this text.
-        Format as JSON array:
-        [{{"question": "Question text", "options": ["A", "B", "C", "D"], "correct_answers": [0], "explanation": "Why", "type": "MCQ"}}]
-        
-        Text: {text[:3000]}"""
-        
-        response = model.generate_content(prompt)
-        response_text = response.text.strip()
-        if response_text.startswith('```json'):
-            response_text = response_text[7:]
-        if response_text.endswith('```'):
-            response_text = response_text[:-3]
-        
-        return json.loads(response_text.strip())
-    except:
-        return []
+    return []  # Disabled for minimal deployment
 
 # Routes
 @app.route('/api/admin/ai-status')
@@ -105,54 +70,7 @@ def ai_status():
 
 @app.route('/api/admin/upload-pdf', methods=['POST'])
 def upload_pdf():
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file uploaded'}), 400
-    
-    file = request.files['file']
-    test_title = request.form.get('title', 'Test')
-    duration = int(request.form.get('duration', 60))
-    
-    pdf_path = f"temp_{file.filename}"
-    file.save(pdf_path)
-    
-    try:
-        text = extract_text_from_pdf(pdf_path)
-        questions_data = generate_questions_with_ai(text)
-        
-        if not questions_data:
-            return jsonify({'error': 'Failed to generate questions'}), 400
-        
-        test = Test(title=test_title, duration=duration)
-        db.session.add(test)
-        db.session.flush()
-        
-        for q_data in questions_data:
-            question = Question(
-                test_id=test.id,
-                question_text=q_data['question'],
-                question_type=q_data['type'],
-                explanation=q_data['explanation']
-            )
-            db.session.add(question)
-            db.session.flush()
-            
-            for j, option_text in enumerate(q_data['options']):
-                option = Option(
-                    question_id=question.id,
-                    option_text=option_text,
-                    is_correct=j in q_data['correct_answers']
-                )
-                db.session.add(option)
-        
-        db.session.commit()
-        os.remove(pdf_path)
-        
-        return jsonify({'message': f'Test created with {len(questions_data)} questions'})
-    except Exception as e:
-        db.session.rollback()
-        if os.path.exists(pdf_path):
-            os.remove(pdf_path)
-        return jsonify({'error': str(e)}), 500
+    return jsonify({'error': 'PDF upload disabled in minimal deployment. Use JSON upload instead.'}), 400
 
 @app.route('/api/admin/upload-json', methods=['POST'])
 def upload_json():
